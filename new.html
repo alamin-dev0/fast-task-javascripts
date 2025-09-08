@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Game Signup — YourSite</title>
+  <style>
+    :root{
+      --bg:#071022; --panel:#0b1220; --muted:#9aa9bf; --accent1:#06b6d4; --accent2:#0ea5a4;
+      --glass: rgba(255,255,255,0.03); --success:#10b981; --danger:#ef4444; --text:#e6eef6;
+      --radius:12px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Roboto,Arial;background:linear-gradient(180deg,var(--bg),#081129);color:var(--text);-webkit-font-smoothing:antialiased}
+    .container{max-width:1000px;margin:0 auto;padding:18px;width:100%}
+
+/* Header */
+    header{background:linear-gradient(90deg,rgba(255,255,255,0.02),transparent);border-bottom:1px solid rgba(255,255,255,0.03)}
+    nav.container{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:44px;height:44;border-radius:10px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:flex;align-items:center;justify-content:center;color:#022;font-weight:800}
+    .nav-links{display:flex;gap:10px;align-items:center}
+    .nav-links a{color:var(--muted);text-decoration:none;padding:8px 10px;border-radius:8px}
+    .nav-links a:hover{background:var(--glass)}
+    .btn{padding:8px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
+    .btn.primary{background:linear-gradient(180deg,var(--accent1),var(--accent2));color:#022}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+
+/* Main */
+    main{flex:1;padding:28px 18px}
+    .hero{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    h1{margin:0 0 6px}
+    p.lead{margin:0;color:var(--muted)}
+
+/* Footer */
+    footer{padding:18px;border-top:1px solid rgba(255,255,255,0.03);background:transparent;display:flex;justify-content:space-between;align-items:center}
+    .footer-left{color:var(--muted)}
+
+/* Modal (improved + responsive) */
+    .backdrop{
+      position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+      background:linear-gradient(180deg,rgba(2,6,23,0.6),rgba(2,6,23,0.72));z-index:120;
+      -webkit-overflow-scrolling:touch;
+    }
+    .backdrop.show{display:flex}
+    .modal{
+      background:var(--panel);padding:20px;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.03);
+      width:100%;max-width:640px;box-shadow:0 30px 80px rgba(2,6,23,.6);
+      transform:translateY(0);transition:transform .18s ease,opacity .12s ease;opacity:1;
+      max-height:84vh;overflow:auto;
+    }
+    /* subtle entrance for desktop */
+    .backdrop.show .modal{transform:translateY(0);opacity:1}
+
+    /* modal header actions */
+    .modal-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+    .modal-title{font-size:18px;margin:0}
+    .modal-close{background:transparent;border:0;color:var(--muted);font-weight:700;border-radius:8px;padding:6px 8px;cursor:pointer}
+    .modal-close:hover{background:rgba(255,255,255,0.02)}
+
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .field{display:flex;flex-direction:column;margin-bottom:10px}
+    label{font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type="text"],input[type="email"],input[type="tel"],select,textarea{
+      background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px;border-radius:8px;color:inherit;font-size:14px
+    }
+    input:focus{outline:none;box-shadow:0 8px 24px rgba(6,182,212,0.06);border-color:rgba(6,182,212,0.36)}
+    .games{max-height:220px;overflow:auto;padding:8px;border-radius:8px;border:1px dashed rgba(255,255,255,0.03);background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent)}
+    .game{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;margin-bottom:6px;transition:background .12s}
+    .game:hover{background:rgba(255,255,255,0.01)}
+    .game input{width:18px;height:18px}
+    .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+    .note{font-size:13px;color:var(--muted);margin-top:8px}
+
+/* Status / toast */
+    .status{min-width:92px;text-align:center;font-size:13px;color:var(--muted)}
+    .status.ok{color:var(--success)}
+    .status.sent{color:lightgreen}
+    .status.err{color:var(--danger)}
+    .toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);background:rgba(255,255,255,0.06);color:var(--text);padding:8px 14px;border-radius:999px;display:none;z-index:200;backdrop-filter:blur(6px)}
+
+/* disabled / button styles */
+    .btn.ghost[disabled], .btn[disabled]{opacity:.5;pointer-events:none}
+    .btn.small{padding:6px 8px;font-size:13px;border-radius:8px}
+
+/* Focus trap helpers */
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Responsive: mobile modal as bottom sheet */
+    @media(max-width:720px){
+      .grid{grid-template-columns:1fr}
+      .nav-links{display:flex;gap:6px}
+      .modal{
+        margin:0 12px 12px 12px;
+        max-width:calc(100% - 24px);
+        border-radius:14px 14px 8px 8px;
+        width:100%;
+        max-height:92vh;
+      }
+      .modal-header{gap:8px}
+      .modal-close{padding:8px}
+    }
+  </style>
+</head>
+<body>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <header>
+    <nav class="container" aria-label="Main navigation">
+      <div class="brand" aria-hidden="false">
+        <div class="logo" aria-hidden="true">YS</div>
+        <div>
+          <div style="font-weight:700">YourSite</div>
+          <div style="font-size:13px;color:var(--muted)">Simple demo</div>
+        </div>
+      </div>
+
+      <div class="nav-links" role="navigation" aria-label="Header links">
+        <a href="#" aria-label="Home">Home</a>
+        <a href="#" aria-label="Docs">Docs</a>
+        <a href="#" aria-label="Contact">Contact</a>
+        <button class="btn ghost" id="openAuthHeader" aria-haspopup="dialog">Open Form</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="hero" aria-labelledby="heroTitle">
+      <h1 id="heroTitle">Simple page — game signup</h1>
+      <p class="lead">Footer অথবা Header থেকে ফর্ম মডাল খুলুন। নাম, ইমেইল, ফোন, গেম সিলেক্ট করে সাবমিট করুন। ইমেইল/ফোনে কোড পাঠানো সিমুলেটেড ও কাজ করবে।</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div class="footer-left">© 2025 YourSite</div>
+      <div>
+        <button class="btn primary" id="openFooterForm">Open Signup Form</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- FORM MODAL -->
+  <div class="backdrop" id="formBackdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" role="document" aria-labelledby="formTitle">
+      <div class="modal-header">
+        <h2 id="formTitle" class="modal-title">Sign up & select games</h2>
+        <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+      </div>
+
+      <p class="note" style="margin-top:6px">Required fields marked — ইমেইল/ফোন কোড সিমুলেটেড; কোড পাঠালে যাচাই বাধ্যতামূলক হবে।</p>
+
+      <form id="signupForm" novalidate>
+        <div class="grid" style="margin-top:12px">
+          <div class="field">
+            <label for="name">নাম <span style="color:var(--danger)">*</span></label>
+            <input id="name" name="name" type="text" required placeholder="আপনার নাম" />
+          </div>
+
+          <div class="field">
+            <label for="age">বয়স</label>
+            <input id="age" name="age" type="number" min="6" max="120" placeholder="বয়স (ঐচ্ছিক)" />
+          </div>
+
+          <div class="field">
+            <label for="email">ইমেইল <span style="color:var(--danger)">*</span></label>
+            <input id="email" name="email" type="email" required placeholder="you@example.com" autocomplete="email" />
+            <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+              <input id="emailCode" placeholder="কোড লিখুন" inputmode="numeric" pattern="\d{4}" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04)" />
+              <div class="status" id="emailStatus" aria-live="polite"></div>
+              <button type="button" class="btn ghost small" id="sendEmailBtn" disabled>Send</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="phone">ফোন <span style="color:var(--danger)">*</span></label>
+            <input id="phone" name="phone" type="tel" inputmode="tel" maxlength="16" pattern="\+?[0-9]{7,15}" required placeholder="+8801XXXXXXXXX" autocomplete="tel" />
+            <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+              <input id="phoneCode" placeholder="কোড লিখুন" inputmode="numeric" pattern="\d{4}" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04)" />
+              <div class="status" id="phoneStatus" aria-live="polite"></div>
+              <button type="button" class="btn ghost small" id="sendPhoneBtn" disabled>Send</button>
+            </div>
+          </div>
+
+          <div class="field" style="grid-column:1/-1">
+            <label>Choose games (কমপক্ষে ১টি সিলেক্ট করতে হবে) <span style="color:var(--danger)">*</span></label>
+            <div class="games" id="gamesList" role="group" aria-label="Games list"></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
+          <button type="submit" class="btn primary" id="submitBtn" disabled>Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CONFIRM CANCEL -->
+  <div class="backdrop" id="confirmBackdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" role="document" aria-labelledby="confirmTitle">
+      <div class="modal-header">
+        <h2 id="confirmTitle" class="modal-title">Confirm cancel</h2>
+        <button class="modal-close" aria-label="Close confirm" id="confirmClose">✕</button>
+      </div>
+      <p class="lead">আপনি কি নিশ্চিত ফর্ম বাতিল করতে চান? সব তথ্য হারাবে।</p>
+      <div class="actions" style="margin-top:12px">
+        <button class="btn ghost" id="confirmNo">না</button>
+        <button class="btn" id="confirmYes" style="background:linear-gradient(180deg,var(--danger),#dc2626);color:#fff">হ্যাঁ, বাতিল</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="backdrop" id="successBackdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" role="document" aria-labelledby="successTitle">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:60px;height:60px;border-radius:999px;background:linear-gradient(180deg,var(--success),#059669);display:flex;align-items:center;justify-content:center;color:#042a24;font-size:26px">✓</div>
+        <div>
+          <h2 id="successTitle" style="margin:0 0 6px">Submitted</h2>
+          <p id="successMsg" class="lead">সাবমিশন সফল হয়েছে।</p>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <button class="btn primary" id="closeSuccess">Close</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ========== DATA ========== */
+const sampleGames = [
+  "Goal Rush","Stadium Frenzy","Cricket Clash","Tap Adventure","Racing Nitro",
+  "Puzzle Pop","Manager Legend","Bowling Blitz","Runner X","Island Builder",
+  "Arcade Retro","Strategy Conquest"
+];
+
+/* ========== REFS ========== */
+const openFooterForm = document.getElementById('openFooterForm');
+const openAuthHeader = document.getElementById('openAuthHeader');
+const formBackdrop = document.getElementById('formBackdrop');
+const confirmBackdrop = document.getElementById('confirmBackdrop');
+const successBackdrop = document.getElementById('successBackdrop');
+const signupForm = document.getElementById('signupForm');
+const gamesList = document.getElementById('gamesList');
+const sendEmailBtn = document.getElementById('sendEmailBtn');
+const sendPhoneBtn = document.getElementById('sendPhoneBtn');
+const emailInput = document.getElementById('email');
+const phoneInput = document.getElementById('phone');
+const emailCodeInput = document.getElementById('emailCode');
+const phoneCodeInput = document.getElementById('phoneCode');
+const emailStatus = document.getElementById('emailStatus');
+const phoneStatus = document.getElementById('phoneStatus');
+const submitBtn = document.getElementById('submitBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+const confirmYes = document.getElementById('confirmYes');
+const confirmNo = document.getElementById('confirmNo');
+const successMsg = document.getElementById('successMsg');
+const closeSuccess = document.getElementById('closeSuccess');
+const toast = document.getElementById('toast');
+const modalClose = document.getElementById('modalClose');
+const confirmClose = document.getElementById('confirmClose');
+
+let selected = new Set();
+let emailVer = {sent:false, code:'', ok:false};
+let phoneVer = {sent:false, code:'', ok:false};
+let activeTrap = null;
+
+/* ========== HELPERS ========== */
+function showToast(text, ms=1600){
+  toast.textContent = text; toast.style.display = 'block'; toast.style.opacity = '1';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>{ toast.style.opacity='0'; setTimeout(()=> toast.style.display='none',200); }, ms);
+}
+function openModal(el){
+  el.classList.add('show'); el.setAttribute('aria-hidden','false'); trapFocus(el.querySelector('.modal'));
+}
+function closeModal(el){
+  el.classList.remove('show'); el.setAttribute('aria-hidden','true'); releaseTrap();
+}
+function trapFocus(container){
+  releaseTrap();
+  if(!container) return;
+  const focusable = Array.from(container.querySelectorAll('a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])'));
+  if(focusable.length === 0) return;
+  const first = focusable[0], last = focusable[focusable.length-1];
+  first.focus();
+  function handler(e){
+    if(e.key === 'Tab'){
+      if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    } else if(e.key === 'Escape'){
+      // close topmost modal
+      const modals = [formBackdrop, confirmBackdrop, successBackdrop];
+      for(const m of modals){ if(m.classList.contains('show')) closeModal(m); }
+    }
+  }
+  document.addEventListener('keydown', handler);
+  activeTrap = ()=> document.removeEventListener('keydown', handler);
+}
+function releaseTrap(){ if(activeTrap){ activeTrap(); activeTrap = null; } }
+
+/* ========== RENDER GAMES ========== */
+function renderGames(){
+  gamesList.innerHTML = '';
+  sampleGames.forEach((g,i)=>{
+    const id = 'g'+i;
+    const div = document.createElement('div');
+    div.className = 'game';
+    div.innerHTML = `<input type="checkbox" id="${id}" data-id="${id}" ${selected.has(id)?'checked':''}> <label for="${id}">${g}</label>`;
+    gamesList.appendChild(div);
+  });
+  gamesList.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener('change', e=>{
+      const id = e.target.dataset.id;
+      if(e.target.checked) selected.add(id); else selected.delete(id);
+      updateSubmitState();
+    });
+  });
+}
+
+/* ========== VALIDATION & SEND CODE (SIMULATED) ========== */
+function genCode(){ return String(Math.floor(1000 + Math.random()*9000)); }
+function startCooldown(btn, seconds=30){
+  btn.disabled = true;
+  const orig = btn.textContent;
+  let s = seconds;
+  btn.textContent = `${orig} (${s}s)`;
+  const tid = setInterval(()=>{
+    s--;
+    if(s<=0){ clearInterval(tid); btn.textContent = orig; btn.disabled = false; }
+    else btn.textContent = `${orig} (${s}s)`;
+  },1000);
+}
+
+emailInput.addEventListener('input', ()=>{ sendEmailBtn.disabled = !emailInput.checkValidity(); });
+phoneInput.addEventListener('input', ()=>{
+  let v = phoneInput.value || ''; v = v.replace(/[^\d+]/g,'');
+  if(v.indexOf('+')>0) v = v.replace(/\+/g,''); if(v.startsWith('+')) v = '+' + v.slice(1).replace(/\+/g,''); else v = v.replace(/\+/g,'');
+  phoneInput.value = v; sendPhoneBtn.disabled = !phoneInput.checkValidity();
+});
+
+sendEmailBtn.addEventListener('click', ()=>{
+  if(!emailInput.checkValidity()){ emailStatus.textContent='Invalid'; emailStatus.className='status err'; return; }
+  emailVer.code = genCode(); emailVer.sent = true; emailVer.ok = false;
+  emailStatus.textContent = 'Sent'; emailStatus.className='status sent';
+  console.log('Email code ->', emailVer.code, 'to', emailInput.value);
+  emailCodeInput.focus(); startCooldown(sendEmailBtn,30); updateSubmitState();
+});
+
+sendPhoneBtn.addEventListener('click', ()=>{
+  if(!phoneInput.checkValidity()){ phoneStatus.textContent='Invalid'; phoneStatus.className='status err'; return; }
+  phoneVer.code = genCode(); phoneVer.sent = true; phoneVer.ok = false;
+  phoneStatus.textContent = 'Sent'; phoneStatus.className='status sent';
+  console.log('Phone code ->', phoneVer.code, 'to', phoneInput.value);
+  phoneCodeInput.focus(); startCooldown(sendPhoneBtn,30); updateSubmitState();
+});
+
+emailCodeInput.addEventListener('input', ()=>{
+  const v = emailCodeInput.value.trim();
+  if(!emailVer.sent){ emailStatus.textContent='Not sent'; emailStatus.className='status'; return; }
+  if(v === emailVer.code){ emailVer.ok = true; emailStatus.textContent='OK'; emailStatus.className='status ok'; }
+  else { emailVer.ok = false; emailStatus.textContent='Wrong'; emailStatus.className='status err'; }
+  updateSubmitState();
+});
+phoneCodeInput.addEventListener('input', ()=>{
+  const v = phoneCodeInput.value.trim();
+  if(!phoneVer.sent){ phoneStatus.textContent='Not sent'; phoneStatus.className='status'; return; }
+  if(v === phoneVer.code){ phoneVer.ok = true; phoneStatus.textContent='OK'; phoneStatus.className='status ok'; }
+  else { phoneVer.ok = false; phoneStatus.textContent='Wrong'; phoneStatus.className='status err'; }
+  updateSubmitState();
+});
+
+/* ========== FORM STATE ========== */
+function updateSubmitState(){
+  const formValid = signupForm.checkValidity();
+  const hasGame = selected.size > 0;
+  const emailOk = emailVer.sent ? emailVer.ok : true;
+  const phoneOk = phoneVer.sent ? phoneVer.ok : true;
+  const allow = formValid && hasGame && emailOk && phoneOk;
+  submitBtn.disabled = !allow;
+  submitBtn.classList.toggle('disabled', !allow);
+}
+
+/* ========== OPEN / CLOSE HANDLERS ========== */
+function openForm(){ renderGames(); openModal(formBackdrop); }
+function closeForm(){ closeModal(formBackdrop); }
+
+openFooterForm.addEventListener('click', openForm);
+openAuthHeader.addEventListener('click', openForm);
+
+document.querySelectorAll('.backdrop').forEach(bp=>{
+  bp.addEventListener('click', (e)=>{ if(e.target === bp) closeModal(bp); });
+});
+
+/* CANCEL flow */
+cancelBtn.addEventListener('click', ()=> openModal(confirmBackdrop));
+confirmNo.addEventListener('click', ()=> closeModal(confirmBackdrop));
+confirmYes.addEventListener('click', ()=>{
+  closeModal(confirmBackdrop);
+  resetForm();
+  closeForm();
+  showToast('Form cancelled');
+});
+confirmClose && confirmClose.addEventListener('click', ()=> closeModal(confirmBackdrop));
+modalClose && modalClose.addEventListener('click', ()=> closeForm());
+
+/* SUBMIT flow */
+signupForm.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  updateSubmitState();
+  if(submitBtn.disabled){ showToast('Form incomplete or verification missing',1400); return; }
+  const payload = {
+    name: signupForm.name.value.trim(),
+    age: signupForm.age.value || null,
+    email: emailInput.value.trim(),
+    phone: phoneInput.value.trim(),
+    games: Array.from(selected).map(id => sampleGames[Number(id.slice(1))])
+  };
+  console.log('Submit payload:', payload);
+  successMsg.textContent = `সাবমিট সফল — ${payload.games.length}টি গেম নির্বাচিত হয়েছে।`;
+  resetForm();
+  closeForm();
+  openModal(successBackdrop);
+});
+
+/* SUCCESS close */
+closeSuccess.addEventListener('click', ()=> closeModal(successBackdrop));
+
+/* reset form */
+function resetForm(){
+  signupForm.reset();
+  selected.clear();
+  emailVer = {sent:false,code:'',ok:false};
+  phoneVer = {sent:false,code:'',ok:false};
+  emailStatus.textContent=''; phoneStatus.textContent='';
+  emailCodeInput.value=''; phoneCodeInput.value='';
+  renderGames();
+  updateSubmitState();
+}
+
+/* initialization */
+renderGames();
+updateSubmitState();
+
+/* keyboard accessibility */
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape'){
+    if(formBackdrop.classList.contains('show')) closeForm();
+    if(confirmBackdrop.classList.contains('show')) closeModal(confirmBackdrop);
+    if(successBackdrop.classList.contains('show')) closeModal(successBackdrop);
+  }
+});
+</script>
+</body>
+</html>

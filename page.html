@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Simple Game Form — Fast Task</title>
+  <style>
+    :root{--bg:#0b1220;--card:#0f1724;--muted:#9aa9bf;--accent:#06b6d4;--accent2:#0ea5a4;--success:#10b981}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#071022,#081129);color:#e6eef6;min-height:100vh;display:flex;flex-direction:column}
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.02)}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:44px;height:44;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;justify-content:center;align-items:center;font-weight:800;color:#012}
+    nav a{color:var(--muted);text-decoration:none;margin-left:12px;font-size:14px}
+    main{flex:1;padding:28px;max-width:980px;margin:0 auto;width:100%}
+    .hero{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.02)}
+    h1{margin:0 0 6px;font-size:20px}
+    p.lead{margin:0;color:var(--muted)}
+    footer{padding:18px 24px;border-top:1px solid rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .openFormBtn{background:linear-gradient(180deg,var(--accent),var(--accent2));border:0;padding:10px 12px;border-radius:10px;color:#022;font-weight:700;cursor:pointer}
+
+    /* modal */
+    .verify-box .status{min-width:70px;font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:center}
+    .btn.ghost[disabled]{opacity:.5;pointer-events:none}
+    input.invalid{border-color:tomato; box-shadow:0 8px 24px rgba(239,68,68,0.06)}
+    .backdrop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.6);z-index:80}
+    .backdrop.show{display:flex}
+    .modal{width:100%;max-width:520px;background:var(--card);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 30px 80px rgba(2,6,23,.6)}
+    .modal h2{margin:0 0 8px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input,select,button{font:inherit}
+    input[type="text"],input[type="email"],input[type="tel"],select{
+      width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit
+    }
+    .full{grid-column:1/ -1}
+    .games{max-height:200px;overflow:auto;padding:8px;border-radius:8px;border:1px dashed rgba(255,255,255,0.03);background:rgba(255,255,255,0.01)}
+    .game{display:flex;align-items:center;gap:8px;padding:6px;border-radius:6px}
+    .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+    .btn{padding:9px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#022}
+    .btn.warn{background:#ef4444;color:#fff}
+    .note{font-size:13px;color:var(--muted);margin-top:8px}
+
+    .small{font-size:13px;padding:6px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--muted)}
+    .row{display:flex;gap:8px}
+    .verify-box{display:flex;gap:8px;align-items:center}
+
+    .ok{color:var(--success);font-weight:700;font-size:13px}
+    .disabled{opacity:.55;pointer-events:none}
+
+    @media(max-width:640px){.grid{grid-template-columns:1fr} .full{grid-column:auto}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true">FT</div>
+      <div>
+        <div style="font-weight:700">Fast Task</div>
+        <div style="font-size:13px;color:var(--muted)">simple demo</div>
+      </div>
+    </div>
+    <nav aria-label="Main navigation">
+      <a href="#">Home</a><a href="#">About</a><a href="#">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="heroTitle">
+      <h1 id="heroTitle">Game selection form</h1>
+      <p class="lead">এখানে আপনি আপনার নাম, ইমেইল, ফোন এবং গেম সিলেক্ট করে সাবমিট করতে পারবেন। সাবমিট করার আগে কমপক্ষে একটি গেম নির্বাচন আবশ্যক।</p>
+    </section>
+
+    <div style="height:16px"></div>
+
+    <section>
+      <p class="note">নিচের বাটনটিতে ক্লিক করে ফর্ম খুলুন:</p>
+      <button id="openForm" class="openFormBtn">Open Game Form</button>
+    </section>
+  </main>
+
+  <footer>
+    <div class="note">© Fast Task — demo</div>
+    <div>
+      <button id="openFooterForm" class="openFormBtn">Open Form</button>
+    </div>
+  </footer>
+
+  <!-- form modal -->
+  <div id="formBackdrop" class="backdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" role="document" aria-labelledby="formTitle">
+      <h2 id="formTitle">Join & select games</h2>
+
+      <form id="gameForm" novalidate>
+        <div class="grid" style="margin-top:8px">
+          <div>
+            <label for="name">নাম</label>
+            <input id="name" name="name" type="text" required />
+          </div>
+
+          <div>
+            <label for="email">ইমেইল</label>
+            <input id="email" name="email" type="email" required />
+            <div class="row" style="margin-top:8px">
+              <div style="flex:1" class="verify-box">
+                <input id="emailCode" placeholder="ইমেইল কোড" class="small" style="flex:1;min-width:120px" />
+                <div id="emailStatus" class="status" aria-live="polite"></div>
+              </div>
+              <button type="button" id="sendEmailCode" class="btn ghost" disabled>Send code</button>
+            </div>
+          </div>
+
+          <div>
+            <label for="phone">ফোন</label>
+            <input id="phone" name="phone" type="tel" inputmode="tel" maxlength="15" placeholder="+8801XXXXXXXXX" pattern="\+?[0-9]{7,15}" required />
+            <div class="row" style="margin-top:8px">
+              <div style="flex:1" class="verify-box">
+                <input id="phoneCode" placeholder="ফোন কোড" class="small" style="flex:1;min-width:120px" />
+                <div id="phoneStatus" class="status" aria-live="polite"></div>
+              </div>
+              <button type="button" id="sendPhoneCode" class="btn ghost" disabled>Send code</button>
+            </div>
+          </div>
+
+          <div class="full">
+            <label>Choose games (কমপক্ষে 1 টি)</label>
+            <div class="games" id="gamesList" role="group" aria-label="Games list"></div>
+          </div>
+        </div>
+
+        <div class="actions" style="margin-top:12px">
+          <button type="button" id="cancelBtn" class="btn ghost">Cancel</button>
+          <button type="submit" id="submitBtn" class="btn primary disabled" disabled>Submit</button>
+        </div>
+
+        <div class="note" id="formNote" style="margin-top:8px">ফর্ম পূরণ করে যাচাই করুন — ইমেইল/ফোন ভেরিফিকেশন অপশন আছে (সিমুলেটেড)।</div>
+      </form>
+    </div>
+  </div>
+
+  <!-- confirm modal -->
+  <div id="confirmBackdrop" class="backdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal">
+      <h2>Confirm</h2>
+      <p class="lead">আপনি কি নিশ্চিত বাতিল করতে চান? পরিবর্তনগুলো হারাবে।</p>
+      <div class="actions" style="margin-top:12px">
+        <button id="confirmNo" class="btn ghost">না</button>
+        <button id="confirmYes" class="btn warn">হ্যাঁ, বাতিল</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- success modal -->
+  <div id="successBackdrop" class="backdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal" aria-labelledby="successTitle">
+      <h2 id="successTitle">Success</h2>
+      <p id="successMsg" class="lead">আপনি সফলভাবে সাবমিট করেছেন। ধন্যবাদ!</p>
+      <div class="actions" style="margin-top:12px">
+        <button id="closeSuccess" class="btn primary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // simple game list
+    const sampleGames = ["Goal Rush","Stadium Frenzy","Cricket Clash","Tap Adventure","Racing Nitro","Puzzle Pop","Manager Legend","Bowling Blitz","Runner X","Island Builder"];
+    const gamesList = document.getElementById('gamesList');
+    const formBackdrop = document.getElementById('formBackdrop');
+    const openForm = document.getElementById('openForm');
+    const openFooterForm = document.getElementById('openFooterForm');
+    const gameForm = document.getElementById('gameForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const confirmBackdrop = document.getElementById('confirmBackdrop');
+    const confirmYes = document.getElementById('confirmYes');
+    const confirmNo = document.getElementById('confirmNo');
+    const successBackdrop = document.getElementById('successBackdrop');
+    const closeSuccess = document.getElementById('closeSuccess');
+
+    // verification controls
+    const sendEmailCode = document.getElementById('sendEmailCode');
+    const sendPhoneCode = document.getElementById('sendPhoneCode');
+    const emailInput = document.getElementById('email');
+    const phoneInput = document.getElementById('phone');
+    const emailCodeInput = document.getElementById('emailCode');
+    const phoneCodeInput = document.getElementById('phoneCode');
+    const emailStatus = document.getElementById('emailStatus');
+    const phoneStatus = document.getElementById('phoneStatus');
+
+    let selected = new Set();
+    let emailVerification = {sent:false, code:'', ok:false};
+    let phoneVerification = {sent:false, code:'', ok:false};
+
+    function renderGames(){
+      gamesList.innerHTML = '';
+      sampleGames.forEach((g, i)=>{
+        const id = 'g'+i;
+        const div = document.createElement('div');
+        div.className = 'game';
+        div.innerHTML = `<input type="checkbox" id="${id}" data-id="${id}"><label for="${id}" style="margin-left:6px">${g}</label>`;
+        gamesList.appendChild(div);
+      });
+      gamesList.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+        cb.addEventListener('change', e=>{
+          const id = e.target.dataset.id;
+          if(e.target.checked) selected.add(id); else selected.delete(id);
+          updateSubmitState();
+        });
+      });
+    }
+
+    function openModal(el){ el.classList.add('show'); el.setAttribute('aria-hidden','false'); }
+    function closeModal(el){ el.classList.remove('show'); el.setAttribute('aria-hidden','true'); }
+
+    // show/hide modals uses .show class
+    function showForm(){ openModal(formBackdrop); setTimeout(()=> formBackdrop.querySelector('input,button').focus(),40); }
+    function hideForm(){ closeModal(formBackdrop); resetVerificationIndicators(); }
+
+    openForm.addEventListener('click', showForm);
+    openFooterForm.addEventListener('click', showForm);
+
+    // cancel -> confirm
+    cancelBtn.addEventListener('click', ()=> openModal(confirmBackdrop));
+    confirmNo.addEventListener('click', ()=> closeModal(confirmBackdrop));
+    confirmYes.addEventListener('click', ()=>{
+      closeModal(confirmBackdrop);
+      hideForm();
+      resetForm();
+    });
+
+    // success
+    function showSuccess(msg){
+      document.getElementById('successMsg').textContent = msg || 'সাবমিশন সফল হয়েছে';
+      openModal(successBackdrop);
+    }
+    closeSuccess.addEventListener('click', ()=> closeModal(successBackdrop));
+
+    // send simulated codes
+    function generateCode(){ return String(Math.floor(1000 + Math.random()*9000)); }
+
+    sendEmailCode.addEventListener('click', ()=>{
+      const mail = emailInput.value.trim();
+      if(!mail || !emailInput.checkValidity()){ emailStatus.textContent = 'Invalid'; emailStatus.style.color = 'tomato'; return; }
+      emailVerification.code = generateCode();
+      emailVerification.sent = true; emailVerification.ok = false;
+      emailStatus.textContent = 'Sent';
+      emailStatus.style.color = 'lightgreen';
+      // simulate "sent code" (console)
+      console.log('Simulated email code ->', emailVerification.code, 'to', mail);
+      emailCodeInput.focus();
+      updateSubmitState();
+    });
+
+    sendPhoneCode.addEventListener('click', ()=>{
+      const ph = phoneInput.value.trim();
+      if(!ph || !phoneInput.checkValidity()){ phoneStatus.textContent = 'Invalid'; phoneStatus.style.color = 'tomato'; return; }
+      phoneVerification.code = generateCode();
+      phoneVerification.sent = true; phoneVerification.ok = false;
+      phoneStatus.textContent = 'Sent';
+      phoneStatus.style.color = 'lightgreen';
+      console.log('Simulated phone code ->', phoneVerification.code, 'to', ph);
+      phoneCodeInput.focus();
+      updateSubmitState();
+    });
+
+    // verify code inputs
+    emailCodeInput.addEventListener('input', ()=>{
+      const v = emailCodeInput.value.trim();
+      if(!emailVerification.sent){ emailStatus.textContent = 'Not sent'; emailStatus.style.color='var(--muted)'; return; }
+      if(v === emailVerification.code){ emailVerification.ok = true; emailStatus.textContent = 'OK'; emailStatus.style.color = 'lightgreen'; }
+      else { emailVerification.ok = false; emailStatus.textContent = 'Wrong'; emailStatus.style.color = 'tomato'; }
+      updateSubmitState();
+    });
+    phoneCodeInput.addEventListener('input', ()=>{
+      const v = phoneCodeInput.value.trim();
+      if(!phoneVerification.sent){ phoneStatus.textContent = 'Not sent'; phoneStatus.style.color='var(--muted)'; return; }
+      if(v === phoneVerification.code){ phoneVerification.ok = true; phoneStatus.textContent = 'OK'; phoneStatus.style.color = 'lightgreen'; }
+      else { phoneVerification.ok = false; phoneStatus.textContent = 'Wrong'; phoneStatus.style.color = 'tomato'; }
+      updateSubmitState();
+    });
+
+    // enable submit only when form valid, at least one game selected, and verifications (either both verified OR none sent)
+    function updateSubmitState(){
+      const formValid = gameForm.checkValidity();
+      const hasGame = selected.size > 0;
+      // if user used verification (sent) require ok; if not sent, it's optional
+      const emailOk = emailVerification.sent ? emailVerification.ok : true;
+      const phoneOk = phoneVerification.sent ? phoneVerification.ok : true;
+      const allow = formValid && hasGame && emailOk && phoneOk;
+      submitBtn.disabled = !allow;
+      submitBtn.classList.toggle('disabled', !allow);
+    }
+
+    // submit
+    gameForm.addEventListener('submit', e=>{
+      e.preventDefault();
+      updateSubmitState();
+      if(submitBtn.disabled) return;
+      const payload = {
+        name: document.getElementById('name').value.trim(),
+        email: emailInput.value.trim(),
+        phone: phoneInput.value.trim(),
+        games: Array.from(selected).map(id => {
+          const idx = Number(id.slice(1));
+          return sampleGames[idx] || id;
+        })
+      };
+      console.log('Submitting payload:', payload);
+      hideForm();
+      showSuccess(`সাবমিট সফল — ${payload.games.length}টি গেম নির্বাচিত হয়েছে`);
+      resetForm();
+    });
+
+    function resetForm(){
+      gameForm.reset();
+      selected.clear();
+      renderGames(); // re-render to clear checkboxes
+      emailVerification = {sent:false,code:'',ok:false};
+      phoneVerification = {sent:false,code:'',ok:false};
+      resetVerificationIndicators();
+      updateSubmitState();
+    }
+
+    function resetVerificationIndicators(){
+      emailCodeInput.value = '';
+      phoneCodeInput.value = '';
+      emailStatus.textContent = '';
+      phoneStatus.textContent = '';
+    }
+
+    // init
+    renderGames();
+    updateSubmitState();
+
+    // keyboard accessibility: Esc closes modals
+    window.addEventListener('keydown', e=>{
+      if(e.key === 'Escape'){
+        closeModal(formBackdrop);
+        closeModal(confirmBackdrop);
+        closeModal(successBackdrop);
+      }
+    });
+
+    // clicking outside modal closes confirm & success, cancel uses confirm
+    [formBackdrop, confirmBackdrop, successBackdrop].forEach(bp=>{
+      bp.addEventListener('click', e=>{ if(e.target === bp) closeModal(bp); });
+    });
+  </script>
+</body>
+</html>
