@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -89,9 +89,17 @@
     .confirm{ background:var(--card); padding:18px; border-radius:12px; box-shadow:0 16px 40px rgba(12,20,40,0.14); width:100%; max-width:420px; text-align:center; }
     .confirm p{ margin:0 0 12px; color:#0f172a; }
 
-    /* toast */
+    /* toast (default) */
     .toast{ position:fixed; right:18px; top:18px; z-index:1200; background: #0b1220; color:#fff; padding:10px 14px; border-radius:10px; box-shadow:0 12px 28px rgba(2,6,23,0.32); transform:translateY(-10px) scale(.98); opacity:0; transition: transform .22s, opacity .18s; }
     .toast.show{ transform:translateY(0) scale(1); opacity:1; }
+
+    /* toast cancel style (assistant style) */
+    .toast.cancel {
+      background: linear-gradient(180deg,#ef4444,#dc2626);
+      box-shadow: 0 14px 36px rgba(220,38,38,0.28);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
 
     /* responsive */
     @media (max-width:720px){ form{ grid-template-columns:1fr; } .full{ justify-content:stretch; } .modal{ padding:18px; } .modal h2{ font-size:18px; } }
@@ -190,10 +198,17 @@
     let releaseTrap = null;
 
     // helpers
-    function showToast(text='Notice',ms=1800){
-      toast.textContent = text; toast.style.display = 'block';
+    function showToast(text='Notice', ms=1800, type='default'){
+      // reset classes
+      toast.className = 'toast';
+      if(type === 'cancel') toast.classList.add('cancel');
+      toast.textContent = text;
+      toast.style.display = 'block';
       requestAnimationFrame(()=> toast.classList.add('show'));
-      setTimeout(()=>{ toast.classList.remove('show'); setTimeout(()=> toast.style.display='none',200); }, ms);
+      setTimeout(()=> {
+        toast.classList.remove('show');
+        setTimeout(()=> toast.style.display = 'none', 220);
+      }, ms);
     }
 
     function openModal(){
@@ -286,6 +301,8 @@
     confirmYes.addEventListener('click', ()=>{
       hideCancelConfirm();
       closeModal();
+      // show assistant-style cancel notification
+      showToast('বাতিল করা হয়েছে', 1800, 'cancel');
     });
     confirmNo.addEventListener('click', ()=>{
       hideCancelConfirm();
