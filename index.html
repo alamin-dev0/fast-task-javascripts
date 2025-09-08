@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Form Modal — Updated Design</title>
+  <style>
+    /* layout */
+    :root{
+      --bg0:#f6f9ff; --bg1:#eef6ff; --card:#ffffff;
+      --primary-1:#2563eb; --primary-2:#1e40af;
+      --accent-1:#10b981; --accent-2:#059669;
+      --muted:#6b7280; --danger:#ef4444;
+      --glass: rgba(255,255,255,0.6);
+    }
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial; -webkit-font-smoothing:antialiased;}
+    body{
+      display:flex; align-items:center; justify-content:center; min-height:100vh;
+      background: linear-gradient(135deg,var(--bg0) 0%, var(--bg1) 100%);
+      padding:28px; color:#0f172a;
+    }
+
+    /* Main CTA */
+    #myButton{
+      appearance:none; -webkit-appearance:none;
+      background: linear-gradient(180deg,var(--primary-1),var(--primary-2));
+      color:#fff; border:0; padding:14px 22px; border-radius:14px;
+      font-weight:700; letter-spacing:0.2px; cursor:pointer;
+      box-shadow: 0 14px 40px rgba(30,64,175,0.14);
+      transition: transform .18s ease, box-shadow .18s ease, filter .12s;
+    }
+    #myButton:hover{ transform:translateY(-4px); filter:brightness(1.03); }
+    #myButton:active{ transform:translateY(-1px) scale(.995); }
+    #myButton:focus{ outline: 3px solid rgba(37,99,235,0.14); outline-offset:4px; }
+
+    /* Backdrop & Modal */
+    .backdrop{
+      position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+      background: linear-gradient(180deg, rgba(6,12,34,0.32), rgba(6,12,34,0.46));
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); z-index:1000;
+      padding:20px;
+    }
+    .backdrop.show{ display:flex; }
+
+    .modal{
+      width:100%; max-width:620px; background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,250,255,0.98));
+      border-radius:16px; box-shadow: 0 30px 80px rgba(10,20,40,0.18);
+      padding:26px; transform: translateY(12px) scale(.98); opacity:0;
+      transition: transform 260ms cubic-bezier(.2,.9,.2,1), opacity 220ms ease;
+      position:relative;
+    }
+    .modal.show{ transform: translateY(0) scale(1); opacity:1; }
+
+    .modal .header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+    .modal h2{ margin:0; font-size:20px; letter-spacing:.1px; }
+    .modal p.lead{ margin:6px 0 16px; color:var(--muted); font-size:14px; }
+
+    /* form */
+    form{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .field{ display:flex; flex-direction:column; gap:6px; }
+    label{ font-size:13px; color:#334155; }
+    input, textarea{
+      padding:11px 12px; border-radius:10px; border:1px solid #e6edf3; background:var(--card);
+      font-size:14px; color:#0f172a; transition: box-shadow .12s, border-color .12s;
+    }
+    input:focus, textarea:focus{ outline:none; box-shadow:0 8px 24px rgba(37,99,235,0.06); border-color:#60a5fa; }
+    textarea{ grid-column:1 / -1; min-height:110px; resize:vertical; }
+
+    .error{ color:#b91c1c; font-size:12px; display:none; margin-top:4px; }
+    .error.show{ display:block; }
+
+    .full{ grid-column:1 / -1; display:flex; justify-content:flex-end; gap:10px; margin-top:4px; }
+    .btn{ padding:10px 14px; border-radius:10px; border:0; cursor:pointer; font-weight:700; }
+    .btn.primary{ background: linear-gradient(180deg,var(--accent-1),var(--accent-2)); color:#042a24; box-shadow:0 12px 32px rgba(6,95,70,0.12); }
+    .btn.ghost{ background:#f3f4f6; color:#0f172a; }
+    .btn[disabled]{ opacity:.58; cursor:not-allowed; box-shadow:none; transform:none; }
+
+    /* success view */
+    .success{ display:flex; flex-direction:column; align-items:center; gap:14px; padding:16px 8px; }
+    .tick-wrap{ width:92px; height:92px; border-radius:999px; display:flex; align-items:center; justify-content:center;
+      background: linear-gradient(180deg,#34d399,#059669); box-shadow:0 20px 48px rgba(5,150,105,0.12); }
+    .tick{ font-size:36px; color:#06281f; transform:scale(0); opacity:0; transition: transform .26s, opacity .18s; }
+    .tick.show{ transform:scale(1); opacity:1; }
+
+    /* cancel confirm */
+    .confirm-backdrop{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:1100;
+      background: rgba(6,12,34,0.28); }
+    .confirm-backdrop.show{ display:flex; }
+    .confirm{ background:var(--card); padding:18px; border-radius:12px; box-shadow:0 16px 40px rgba(12,20,40,0.14); width:100%; max-width:420px; text-align:center; }
+    .confirm p{ margin:0 0 12px; color:#0f172a; }
+
+    /* toast */
+    .toast{ position:fixed; right:18px; top:18px; z-index:1200; background: #0b1220; color:#fff; padding:10px 14px; border-radius:10px; box-shadow:0 12px 28px rgba(2,6,23,0.32); transform:translateY(-10px) scale(.98); opacity:0; transition: transform .22s, opacity .18s; }
+    .toast.show{ transform:translateY(0) scale(1); opacity:1; }
+
+    /* responsive */
+    @media (max-width:720px){ form{ grid-template-columns:1fr; } .full{ justify-content:stretch; } .modal{ padding:18px; } .modal h2{ font-size:18px; } }
+  </style>
+</head>
+<body>
+  <button id="myButton" aria-haspopup="dialog" aria-controls="formModal">Form Button</button>
+
+  <!-- Modal Backdrop -->
+  <div class="backdrop" id="backdrop" aria-hidden="true">
+    <div class="modal" id="formModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1">
+      <div id="modalContent">
+        <div class="header">
+          <div>
+            <h2 id="modalTitle">Complete the form</h2>
+            <p class="lead">Fill all fields to enable submit. Changes will be lost if you cancel.</p>
+          </div>
+          <button id="closeIcon" aria-label="Close" title="Close" style="background:transparent;border:0;cursor:pointer;font-size:18px;color:var(--muted)">✕</button>
+        </div>
+
+        <form id="detailForm" novalidate>
+          <div class="field">
+            <label for="name">Name</label>
+            <input id="name" name="name" type="text" required autocomplete="name" placeholder="Your name" />
+            <div class="error" data-for="name">Name is required.</div>
+          </div>
+
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
+            <div class="error" data-for="email">Please enter a valid email.</div>
+          </div>
+
+          <div class="field full">
+            <label for="details">Details</label>
+            <textarea id="details" name="details" required placeholder="Describe something..."></textarea>
+            <div class="error" data-for="details">Details cannot be empty.</div>
+          </div>
+
+          <div class="full" style="margin-top:8px;">
+            <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
+            <button type="submit" class="btn primary" id="submitBtn" disabled>Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel Confirm -->
+  <div class="confirm-backdrop" id="confirmBackdrop" aria-hidden="true">
+    <div class="confirm" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <h3 id="confirmTitle" style="margin:0 0 8px;font-size:16px;">Are you sure?</h3>
+      <p>Do you want to cancel? Your entered data will be lost.</p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">
+        <button class="btn" id="confirmNo" style="background:#edf2ff;color:#0f172a;">No, stay</button>
+        <button class="btn" id="confirmYes" style="background:linear-gradient(180deg,#ef4444,#dc2626);color:#fff;">Yes, cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite" style="display:none">Stayed on the form</div>
+
+  <script>
+    // Elements
+    const openBtn = document.getElementById('myButton');
+    const backdrop = document.getElementById('backdrop');
+    const modal = document.getElementById('formModal');
+    const modalContent = document.getElementById('modalContent');
+    const form = document.getElementById('detailForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const closeIcon = document.getElementById('closeIcon');
+
+    const confirmBackdrop = document.getElementById('confirmBackdrop');
+    const confirmYes = document.getElementById('confirmYes');
+    const confirmNo = document.getElementById('confirmNo');
+
+    const toast = document.getElementById('toast');
+
+    const initialHTML = modalContent.innerHTML;
+
+    // Focus trap
+    function trapFocus(container){
+      const focusable = Array.from(container.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'));
+      if(!focusable.length) return ()=>{};
+      const first = focusable[0], last = focusable[focusable.length-1];
+      function handler(e){
+        if(e.key !== 'Tab') return;
+        if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+        else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+      }
+      container.addEventListener('keydown', handler);
+      return ()=>container.removeEventListener('keydown', handler);
+    }
+    let releaseTrap = null;
+
+    // helpers
+    function showToast(text='Notice',ms=1800){
+      toast.textContent = text; toast.style.display = 'block';
+      requestAnimationFrame(()=> toast.classList.add('show'));
+      setTimeout(()=>{ toast.classList.remove('show'); setTimeout(()=> toast.style.display='none',200); }, ms);
+    }
+
+    function openModal(){
+      backdrop.classList.add('show'); modal.classList.add('show'); backdrop.setAttribute('aria-hidden','false');
+      setTimeout(()=> document.getElementById('name')?.focus(), 80);
+      releaseTrap = trapFocus(modal);
+    }
+
+    function closeModal(){
+      backdrop.classList.remove('show'); modal.classList.remove('show'); backdrop.setAttribute('aria-hidden','true');
+      openBtn.focus();
+      if(releaseTrap){ releaseTrap(); releaseTrap = null; }
+      // reset form if not in success state
+      const f = document.getElementById('detailForm');
+      if(f) { f.reset(); updateValidation(); }
+      // restore initial HTML if success view shown
+      if(modalContent.dataset.state === 'success'){
+        modalContent.innerHTML = initialHTML;
+        attachHandlers();
+      }
+    }
+
+    // validation & errors
+    function showErrorFor(input){
+      const err = modalContent.querySelector('.error[data-for="'+input.id+'"]');
+      if(!err) return;
+      if(!input.checkValidity()) err.classList.add('show'); else err.classList.remove('show');
+    }
+
+    function updateValidation(){
+      const f = document.getElementById('detailForm');
+      const s = document.getElementById('submitBtn');
+      if(!f || !s) return;
+      s.disabled = !f.checkValidity();
+      f.querySelectorAll('input,textarea').forEach(i=>showErrorFor(i));
+    }
+
+    // submit
+    function onSubmit(e){
+      e.preventDefault();
+      const f = e.target;
+      if(!f.checkValidity()){ updateValidation(); return; }
+      // success view
+      modalContent.dataset.state = 'success';
+      modalContent.innerHTML = `
+        <div class="success" role="status" aria-live="polite">
+          <div class="tick-wrap"><div class="tick" id="tick">✓</div></div>
+          <h2 style="margin:0">Submit successful</h2>
+          <p class="lead" style="margin:6px 0 0;color:var(--muted)">metion done — your details were submitted.</p>
+          <div style="margin-top:14px;"><button class="btn primary" id="okBtn">OK</button></div>
+        </div>
+      `;
+      setTimeout(()=> document.getElementById('tick')?.classList.add('show'), 40);
+      document.getElementById('okBtn').addEventListener('click', closeModal);
+    }
+
+    // cancel confirm flow
+    function showCancelConfirm(){
+      confirmBackdrop.classList.add('show'); confirmBackdrop.setAttribute('aria-hidden','false');
+      // focus safe option
+      setTimeout(()=> confirmNo.focus(), 30);
+    }
+    function hideCancelConfirm(){ confirmBackdrop.classList.remove('show'); confirmBackdrop.setAttribute('aria-hidden','true'); cancelBtn.focus(); }
+
+    // attach handlers (initial and after restore)
+    function attachHandlers(){
+      const localForm = document.getElementById('detailForm');
+      const localSubmit = document.getElementById('submitBtn');
+      const localCancel = document.getElementById('cancelBtn');
+      const localCloseIcon = document.getElementById('closeIcon');
+
+      if(localForm){
+        localForm.addEventListener('submit', onSubmit);
+        localForm.querySelectorAll('input,textarea').forEach(inp=>{
+          inp.addEventListener('input', updateValidation);
+          inp.addEventListener('blur', ()=>showErrorFor(inp));
+        });
+      }
+      if(localCancel) localCancel.addEventListener('click', showCancelConfirm);
+      if(localCloseIcon) localCloseIcon.addEventListener('click', showCancelConfirm);
+    }
+
+    // initial setup
+    attachHandlers();
+
+    // Open modal
+    openBtn.addEventListener('click', openModal);
+
+    // Cancel confirm actions
+    confirmYes.addEventListener('click', ()=>{
+      hideCancelConfirm();
+      closeModal();
+    });
+    confirmNo.addEventListener('click', ()=>{
+      hideCancelConfirm();
+      showToast('Stayed on the form',1400);
+    });
+    confirmBackdrop.addEventListener('click', (ev)=>{ if(ev.target === confirmBackdrop){ hideCancelConfirm(); showToast('Stayed on the form',1200); } });
+
+    // clicking backdrop closes modal (acts like cancel -> ask confirm)
+    backdrop.addEventListener('click', (ev)=>{ if(ev.target === backdrop){ showCancelConfirm(); } });
+
+    // Escape handling
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'Escape'){
+        if(confirmBackdrop.classList.contains('show')) hideCancelConfirm();
+        else if(backdrop.classList.contains('show')) showCancelConfirm();
+      }
+    });
+  </script>
+</body>
+</html>
